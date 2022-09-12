@@ -136,7 +136,8 @@ int main(int argc, char *argv[])
             queue.push_back(arrival_events[0].customer_id);
             arrival_events.pop_front();
         }
-        // check if we need to take a customer off the machine
+        
+		// check if we need to take a customer off the machine
         if (current_id >= 0)
         {
             if (current_time == time_out)
@@ -151,7 +152,8 @@ int main(int argc, char *argv[])
                 current_id = -1; // the machine is free now
             }
         }
-        // if machine is empty, schedule a new customer
+        
+		// if machine is empty, schedule a new customer
         if (current_id == -1)
         {
             if (!queue.empty()) // is anyone waiting?
