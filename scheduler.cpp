@@ -9,14 +9,14 @@ created by Andrey Kan
 andrey.kan@adelaide.edu.au
 2021
 */
-
 #include <iostream>
 #include <fstream>
 #include <deque>
 #include <vector>
 
 // std is a namespace: https://www.cplusplus.com/doc/oldtutorial/namespaces/
-const int TIME_ALLOWANCE = 8;  // allow to use up to this number of time slots at once
+const int Q1_TIME_ALLOWANCE = 8;  // allow to use up to this number of time slots at once
+const int Q2_TIME_ALLOWANCE = 16;
 const int PRINT_LOG = 0; // print detailed execution trace
 
 class Customer
@@ -127,7 +127,9 @@ int main(int argc, char *argv[])
 
     int current_id = -1; // who is using the machine now, -1 means nobody
     int time_out = -1; // time when current customer will be preempted
-    std::deque<int> queue; // waiting queue
+    std::deque<int> queue1; // waiting queue
+    std::deque<int> queue2;
+    std::deque<int> queue3;
 
     // step by step simulation of each time slot
     bool all_done = false;
@@ -136,21 +138,21 @@ int main(int argc, char *argv[])
         // welcome newly arrived customers
         while (!arrival_events.empty() && (current_time == arrival_events[0].event_time))
         {
-            queue.push_back(arrival_events[0].customer_id);
+            queue1.push_back(arrival_events[0].customer_id);
             arrival_events.pop_front();
         }
-        
-		// check if we need to take a customer off the machine
+
+        // check if we need to take a customer off the machine
         if (current_id >= 0)
         {
             if (current_time == time_out)
             {
                 int last_run = current_time - customers[current_id].playing_since;
-                customers[current_id].slots_remaining -= last_run;
+                customers[current_id].slots_remaining -= last_run; //question
                 if (customers[current_id].slots_remaining > 0)
                 {
                     // customer is not done yet, waiting for the next chance to play
-                    queue.push_back(current_id);
+                    queue2.push_back(current_id);
                 }
                 current_id = -1; // the machine is free now
             }
@@ -159,25 +161,40 @@ int main(int argc, char *argv[])
 		// if machine is empty, schedule a new customer
         if (current_id == -1)
         {
-            if (!queue.empty()) // is anyone waiting?
+            if (!queue1.empty()) // is anyone waiting?
             {
-                current_id = queue.front();
-                queue.pop_front();
-                if (TIME_ALLOWANCE > customers[current_id].slots_remaining)
+                current_id = queue1.front();
+                queue1.pop_front();
+                if (Q1_TIME_ALLOWANCE > customers[current_id].slots_remaining)
                 {
                     time_out = current_time + customers[current_id].slots_remaining;
                 }
                 else
                 {
-                    time_out = current_time + TIME_ALLOWANCE;
+                    time_out = current_time + Q1_TIME_ALLOWANCE;
                 }
                 customers[current_id].playing_since = current_time;
             }
+            else if(!queue2.empty())
+            {
+                current_id = queue2.front();
+                queue2.pop_front();
+                if (Q2_TIME_ALLOWANCE > customers[current_id].slots_remaining)
+                {
+                    time_out = current_time + customers[current_id].slots_remaining;
+                }
+                else
+                {
+                    time_out = current_time + Q2_TIME_ALLOWANCE;
+                }
+                customers[current_id].playing_since = current_time;
+
+            }
         }
-        print_state(out_file, current_time, current_id, arrival_events, queue);
+        print_state(out_file, current_time, current_id, arrival_events, queue1);
 
         // exit loop when there are no new arrivals, no waiting and no playing customers
-        all_done = (arrival_events.empty() && queue.empty() && (current_id == -1));
+        all_done = (arrival_events.empty() && queue1.empty() && (current_id == -1));
     }
 
     return 0;
