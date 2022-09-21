@@ -1,3 +1,5 @@
+all: baseline stats scheduler compare
+
 baseline: baseline.cpp
 		g++ -Wall -o $@ $^
 
@@ -7,25 +9,25 @@ stats: compute_stats.cpp
 scheduler: scheduler.cpp
 		g++ -Wall -o $@ $^
 
-generate_baseline: baseline stats
-		./baseline tests/data_1111.in tests/data_1111_baseline.out
-		./baseline tests/data_2222.in tests/data_2222_baseline.out
-		./baseline tests/data_3333.in tests/data_3333_baseline.out
+compare: compare.cpp
+		g++ -Wall -o $@ $^
 
-test1: scheduler stats generate_baseline
-		./scheduler tests/data_1111.in test1.out
-		./stats tests/data_1111.in tests/data_1111_baseline.out
-		./stats tests/data_1111.in test1.out
+define test_func = 
+	./baseline tests/$(1).in tests/$(1)_baseline.out
+	./scheduler tests/$(1).in tests/$(1)_scheduler.out
+	./stats tests/$(1).in tests/$(1)_baseline.out > tests/$(1)_baseline_results.out
+	./stats tests/$(1).in tests/$(1)_scheduler.out > tests/$(1)_scheduler_results.out
+	./compare tests/$(1)_baseline_results.out tests/$(1)_scheduler_results.out
+endef
 
-test2: scheduler stats generate_baseline
-		./scheduler tests/data_2222.in test2.out
-		./stats tests/data_2222.in tests/data_2222_baseline.out
-		./stats tests/data_2222.in test2.out
+test1: all
+		$(call test_func,data_1111)
 
-test3: scheduler stats generate_baseline
-		./scheduler tests/data_3333.in test3.out
-		./stats tests/data_3333.in tests/data_3333_baseline.out
-		./stats tests/data_3333.in test3.out
+test2: all
+		$(call test_func,data_2222)
+
+test3: all
+		$(call test_func,data_3333)
 
 clean:
-	rm baseline stats scheduler tests/*.out tests/*.txt *.out
+	rm -f baseline stats scheduler compare tests/*.out

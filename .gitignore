@@ -1,0 +1,6 @@
+.vscode
+*.out
+baseline
+compare
+scheduler
+stats
