@@ -1,4 +1,4 @@
-all: baseline stats scheduler scheduler_alt compare
+all: baseline stats scheduler scheduler_alt compare input_generator
 
 baseline: baseline.cpp
 		g++ -Wall -o $@ $^
@@ -13,6 +13,9 @@ scheduler_alt: scheduler_alt.cpp
 		g++ -Wall -o $@ $^
 
 compare: compare.cpp
+		g++ -Wall -o $@ $^
+
+input_generator: input_generator.cpp
 		g++ -Wall -o $@ $^
 
 define test_func = 
@@ -40,7 +43,10 @@ test2: all
 test3: all
 		$(call test_func,data_3333)
 
-alltest: test1 test2 test3
+test4: all
+		$(call test_func,custom_1)
+
+alltest: test1 test2 test3 test4
 
 test1_alt: all
 		$(call test_func_alt,data_1111)
@@ -51,7 +57,10 @@ test2_alt: all
 test3_alt: all
 		$(call test_func_alt,data_3333)
 
-alltest_alt: test1_alt test2_alt test3_alt
+test4_alt: all
+		$(call test_func_alt,custom_1)
+
+alltest_alt: test1_alt test2_alt test3_alt test4_alt
 
 clean:
-	rm -f baseline stats scheduler scheduler_alt compare tests/*.out
+	rm -f baseline stats scheduler scheduler_alt compare input_generator tests/*.out

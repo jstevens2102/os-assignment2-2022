@@ -18,7 +18,6 @@ using namespace std;
 
 // std is a namespace: https://www.cplusplus.com/doc/oldtutorial/namespaces/
 const int Q1_TIME_ALLOWANCE = 8;  // allow to use up to this number of time slots at once
-const int Q2_TIME_ALLOWANCE = 16;
 const int PRINT_LOG = 0; // print detailed execution trace
 
 class Customer
@@ -87,8 +86,7 @@ void print_state(
     int current_id,
     const deque<Event> &arrival_events,
     const deque<int> &customer_queue1,
-	const deque<int> &customer_queue2,
-	const vector<int> &customer_queue3)
+	const vector<int> &customer_queue2)
 {
     out_file << current_time << " " << current_id << '\n';
     if (PRINT_LOG == 0)
@@ -114,29 +112,23 @@ void print_state(
         cout << "[" << customer_queue2[i] << "], ";
     }
     cout << '\n';
-	cout << "Queue3: \n";
-    for (size_t i = 0; i < customer_queue3.size(); i++)
-    {
-        cout << "[" << customer_queue3[i] << "], ";
-    }
-    cout << '\n';
 }
 
-float get_queue3_priority(Customer customer) {
-	return (1/customer.slots_remaining) + customer.age * (1 + customer.priority);
+float get_queue2_priority(Customer customer) {
+	return ((customer.slots_remaining) * (1 + customer.priority));
 }
 
-void queue3_insert(int customer_id, vector<int> &queue3, vector<Customer> &customers) {
-	float priority = get_queue3_priority(customers[customer_id]);
+void queue2_insert(int customer_id, vector<int> &queue2, vector<Customer> &customers) {
+	float priority = get_queue2_priority(customers[customer_id]);
 	
-	for (size_t i = 0; i < queue3.size(); i++) {
-		if (priority > get_queue3_priority(customers[queue3[i]])) {
-			queue3.insert(queue3.begin() + i, customer_id);
+	for (size_t i = 0; i < queue2.size(); i++) {
+		if (priority < get_queue2_priority(customers[queue2[i]])) {
+			queue2.insert(queue2.begin() + i, customer_id);
 			return;
 		}
 	}
 
-	queue3.insert(queue3.end(), customer_id);
+	queue2.insert(queue2.end(), customer_id);
 }
 
 // process command line arguments
@@ -167,8 +159,7 @@ int main(int argc, char *argv[])
     int current_id = -1; // who is using the machine now, -1 means nobody
     int time_out = -1; // time when current customer will be preempted
     deque<int> queue1; // waiting queue
-    deque<int> queue2;
-    vector<int> queue3;
+    vector<int> queue2;
 
     // step by step simulation of each time slot
     bool all_done = false;
@@ -185,28 +176,23 @@ int main(int argc, char *argv[])
         if (current_id >= 0)
         {
 			// take customer off the machine if time slice expires or preempt customer running from queue 3
-            if (current_time == time_out || (customers[current_id].queue == 3 && !queue1.empty()))
+            if (current_time == time_out)
             {
                 int last_run = current_time - customers[current_id].playing_since;
                 customers[current_id].slots_remaining -= last_run; //question
                 if (customers[current_id].slots_remaining > 0)
                 {
                     // customer is not done yet, waiting for the next chance to play
-					// customers go from queue 1 to queue 2 to queue 3
-					// customers in queue 3 that are preempted get added back into queue 3
-					if (customers[current_id].queue == 1) {
-						queue2.push_back(current_id);
-						customers[current_id].queue = 2;
-					} else {
-						//queue3.push_back(current_id);
-						queue3_insert(current_id, queue3, customers);
-						customers[current_id].queue = 3;
-					}
+					// customers go from queue 1 to queue 2
+					// customers in queue 2 that are preempted are added back into queue 2
+					
+					queue2_insert(current_id, queue2, customers);
+					customers[current_id].queue = 2;
                 }
 
-				// age queue 3
-				for (size_t i = 0; i < queue3.size(); i++) {
-					customers[queue3[i]].age += last_run;
+				// age queue 2
+				for (size_t i = 0; i < queue2.size(); i++) {
+					customers[queue2[i]].age += last_run;
 				}
 
                 current_id = -1; // the machine is free now
@@ -230,33 +216,18 @@ int main(int argc, char *argv[])
                 }
                 customers[current_id].playing_since = current_time;
             }
-            else if(!queue2.empty())
+			else if(!queue2.empty())
             {
                 current_id = queue2.front();
-                queue2.pop_front();
-                if (Q2_TIME_ALLOWANCE > customers[current_id].slots_remaining)
-                {
-                    time_out = current_time + customers[current_id].slots_remaining;
-                }
-                else
-                {
-                    time_out = current_time + Q2_TIME_ALLOWANCE;
-                }
-                customers[current_id].playing_since = current_time;
-
-            }
-			else if(!queue3.empty())
-            {
-                current_id = queue3.front();
-                queue3.erase(queue3.begin());
+                queue2.erase(queue2.begin());
                 time_out = current_time + customers[current_id].slots_remaining;
                 customers[current_id].playing_since = current_time;
             }
         }
-        print_state(out_file, current_time, current_id, arrival_events, queue1, queue2, queue3);
+        print_state(out_file, current_time, current_id, arrival_events, queue1, queue2);
 
         // exit loop when there are no new arrivals, no waiting and no playing customers
-        all_done = (arrival_events.empty() && queue1.empty() && queue2.empty() && queue3.empty() && (current_id == -1));
+        all_done = (arrival_events.empty() && queue1.empty() && queue2.empty() && (current_id == -1));
     }
 
     return 0;
