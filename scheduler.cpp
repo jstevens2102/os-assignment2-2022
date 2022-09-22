@@ -86,14 +86,15 @@ void print_state(
     int current_id,
     const deque<Event> &arrival_events,
     const deque<int> &customer_queue1,
-	const vector<int> &customer_queue2)
+	const vector<int> &customer_queue2,
+	int time_out)
 {
     out_file << current_time << " " << current_id << '\n';
     if (PRINT_LOG == 0)
     {
         return;
     }
-    cout << "Time,ID: " << current_time << ", " << current_id << '\n';
+    cout << "Time, ID, Timeout: " << current_time << ", " << current_id << ", " << time_out << '\n';
     cout << "Arrivals: \n";
 	for (size_t i = 0; i < arrival_events.size(); i++)
     {
@@ -175,7 +176,7 @@ int main(int argc, char *argv[])
         // check if we need to take a customer off the machine
         if (current_id >= 0)
         {
-			// take customer off the machine if time slice expires or preempt customer running from queue 3
+			// take customer off the machine if time slice expires
             if (current_time == time_out)
             {
                 int last_run = current_time - customers[current_id].playing_since;
@@ -184,7 +185,6 @@ int main(int argc, char *argv[])
                 {
                     // customer is not done yet, waiting for the next chance to play
 					// customers go from queue 1 to queue 2
-					// customers in queue 2 that are preempted are added back into queue 2
 					
 					queue2_insert(current_id, queue2, customers);
 					customers[current_id].queue = 2;
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
                 customers[current_id].playing_since = current_time;
             }
         }
-        print_state(out_file, current_time, current_id, arrival_events, queue1, queue2);
+        print_state(out_file, current_time, current_id, arrival_events, queue1, queue2, time_out);
 
         // exit loop when there are no new arrivals, no waiting and no playing customers
         all_done = (arrival_events.empty() && queue1.empty() && queue2.empty() && (current_id == -1));

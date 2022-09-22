@@ -44,9 +44,31 @@ test3: all
 		$(call test_func,data_3333)
 
 test4: all
-		$(call test_func,custom_1)
+		$(call test_func,custom_2)
 
-alltest: test1 test2 test3 test4
+test5: all
+		$(call test_func,custom_3)
+
+test6: all
+		$(call test_func,custom_4)
+
+# provided test cases
+test7: all
+		$(call test_func,data_1)
+
+test8: all
+		$(call test_func,data_2)
+
+test9: all
+		$(call test_func,data_3)
+
+test10: all
+		$(call test_func,data_4)
+
+test11: all
+		$(call test_func,data_5)
+
+alltest: test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 
 test1_alt: all
 		$(call test_func_alt,data_1111)
@@ -58,9 +80,33 @@ test3_alt: all
 		$(call test_func_alt,data_3333)
 
 test4_alt: all
-		$(call test_func_alt,custom_1)
+		$(call test_func_alt,custom_2)
 
-alltest_alt: test1_alt test2_alt test3_alt test4_alt
+test5_alt: all
+		$(call test_func_alt,custom_3)
+
+test6_alt: all
+		$(call test_func_alt,custom_4)
+
+# provided test cases
+test7_alt: all
+		$(call test_func_alt,data_1)
+
+test8_alt: all
+		$(call test_func_alt,data_2)
+
+test9_alt: all
+		$(call test_func_alt,data_3)
+
+test10_alt: all
+		$(call test_func_alt,data_4)
+
+test11_alt: all
+		$(call test_func_alt,data_5)
+
+
+
+alltest_alt: test1_alt test2_alt test3_alt test4_alt test5_alt test6_alt test7_alt test8_alt test9_alt test10_alt test11_alt
 
 clean:
 	rm -f baseline stats scheduler scheduler_alt compare input_generator tests/*.out
