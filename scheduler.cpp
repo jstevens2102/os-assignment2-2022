@@ -86,28 +86,44 @@ void print_state(
     int current_time,
     int current_id,
     const deque<Event> &arrival_events,
-    const deque<int> &customer_queue)
+    const deque<int> &customer_queue1,
+	const deque<int> &customer_queue2,
+	const vector<int> &customer_queue3)
 {
     out_file << current_time << " " << current_id << '\n';
     if (PRINT_LOG == 0)
     {
         return;
     }
-    cout << current_time << ", " << current_id << '\n';
-    for (size_t i = 0; i < arrival_events.size(); i++)
+    cout << "Time,ID: " << current_time << ", " << current_id << '\n';
+    cout << "Arrivals: \n";
+	for (size_t i = 0; i < arrival_events.size(); i++)
     {
-        cout << "\t" << arrival_events[i].event_time << ", " << arrival_events[i].customer_id << ", ";
+        cout << "[" << arrival_events[i].event_time << ", " << arrival_events[i].customer_id << "], ";
     }
     cout << '\n';
-    for (size_t i = 0; i < customer_queue.size(); i++)
+	cout << "Queue1: \n";
+    for (size_t i = 0; i < customer_queue1.size(); i++)
     {
-        cout << "\t" << customer_queue[i] << ", ";
+        cout << "[" << customer_queue1[i] << "], ";
+    }
+    cout << '\n';
+	cout << "Queue2: \n";
+    for (size_t i = 0; i < customer_queue2.size(); i++)
+    {
+        cout << "[" << customer_queue2[i] << "], ";
+    }
+    cout << '\n';
+	cout << "Queue3: \n";
+    for (size_t i = 0; i < customer_queue3.size(); i++)
+    {
+        cout << "[" << customer_queue3[i] << "], ";
     }
     cout << '\n';
 }
 
 float get_queue3_priority(Customer customer) {
-	float priority = (1/customer.slots_remaining) + customer.age * (1 + customer.priority);
+	return (1/customer.slots_remaining) + customer.age * (1 + customer.priority);
 }
 
 void queue3_insert(int customer_id, vector<int> &queue3, vector<Customer> &customers) {
@@ -116,8 +132,11 @@ void queue3_insert(int customer_id, vector<int> &queue3, vector<Customer> &custo
 	for (size_t i = 0; i < queue3.size(); i++) {
 		if (priority > get_queue3_priority(customers[queue3[i]])) {
 			queue3.insert(queue3.begin() + i, customer_id);
+			return;
 		}
 	}
+
+	queue3.insert(queue3.end(), customer_id);
 }
 
 // process command line arguments
@@ -179,11 +198,17 @@ int main(int argc, char *argv[])
 						queue2.push_back(current_id);
 						customers[current_id].queue = 2;
 					} else {
-						queue3.push_back(current_id);
-						//queue3_insert(current_id, queue3, customers);
+						//queue3.push_back(current_id);
+						queue3_insert(current_id, queue3, customers);
 						customers[current_id].queue = 3;
 					}
                 }
+
+				// age queue 3
+				for (size_t i = 0; i < queue3.size(); i++) {
+					customers[queue3[i]].age += last_run;
+				}
+
                 current_id = -1; // the machine is free now
             }
         }
@@ -228,10 +253,10 @@ int main(int argc, char *argv[])
                 customers[current_id].playing_since = current_time;
             }
         }
-        print_state(out_file, current_time, current_id, arrival_events, queue1);
+        print_state(out_file, current_time, current_id, arrival_events, queue1, queue2, queue3);
 
         // exit loop when there are no new arrivals, no waiting and no playing customers
-        all_done = (arrival_events.empty() && queue1.empty() && (current_id == -1));
+        all_done = (arrival_events.empty() && queue1.empty() && queue2.empty() && queue3.empty() && (current_id == -1));
     }
 
     return 0;
